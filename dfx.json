@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "canisters": {
+    "daily_workout_plan_backend": {
+      "type": "rust",
+      "package": "daily_workout_plan_backend",
+      "candid": "src/daily_workout_plan_backend/daily_workout_plan_backend.did"
+    }
+  },
+  "output_env_file": ".env"
+}

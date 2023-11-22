@@ -1,0 +1,47 @@
+type Error = variant {
+  NotFound : record { msg : text };
+  Exists : record { msg : text };
+  ServerError : record { msg : text };
+};
+type Result = variant { Ok : User; Err : Error };
+type Result_1 = variant { Ok : WorkoutPlan; Err : Error };
+type User = record {
+  id : nat64;
+  age : nat64;
+  weight : nat64;
+  height : nat64;
+  updated_at : opt nat64;
+  name : text;
+  created_at : nat64;
+};
+type UserPayload = record {
+  age : nat64;
+  weight : nat64;
+  height : nat64;
+  name : text;
+};
+type WorkoutPlan = record {
+  id : nat64;
+  updated_at : opt nat64;
+  push_ups : nat64;
+  created_at : nat64;
+  user_id : nat64;
+  sit_ups : nat64;
+  running_time : nat64;
+};
+type WorkoutPlanPayload = record {
+  push_ups : nat64;
+  user_id : nat64;
+  sit_ups : nat64;
+  running_time : nat64;
+};
+service : {
+  add_user : (UserPayload) -> (opt User);
+  delete_user : (nat64) -> (Result);
+  delete_user_workout_plan : (nat64) -> (Result_1);
+  generate_workout_plan : (nat64) -> (Result_1);
+  get_user : (nat64) -> (Result) query;
+  get_user_workout_plan : (nat64) -> (Result_1) query;
+  update_user : (nat64, UserPayload) -> (Result);
+  update_user_workout_plan : (nat64, WorkoutPlanPayload) -> (Result_1);
+}
