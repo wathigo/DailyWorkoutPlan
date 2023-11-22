@@ -23,6 +23,12 @@ export interface UserPayload {
   'height' : bigint,
   'name' : string,
 }
+export interface UserUpdatePayload {
+  'age' : [] | [bigint],
+  'weight' : [] | [bigint],
+  'height' : [] | [bigint],
+  'name' : [] | [string],
+}
 export interface WorkoutPlan {
   'id' : bigint,
   'updated_at' : [] | [bigint],
@@ -32,11 +38,11 @@ export interface WorkoutPlan {
   'sit_ups' : bigint,
   'running_time' : bigint,
 }
-export interface WorkoutPlanPayload {
-  'push_ups' : bigint,
-  'user_id' : bigint,
-  'sit_ups' : bigint,
-  'running_time' : bigint,
+export interface WorkoutPlanUpdatePayload {
+  'push_ups' : [] | [bigint],
+  'user_id' : [] | [bigint],
+  'sit_ups' : [] | [bigint],
+  'running_time' : [] | [bigint],
 }
 export interface _SERVICE {
   'add_user' : ActorMethod<[UserPayload], [] | [User]>,
@@ -45,9 +51,9 @@ export interface _SERVICE {
   'generate_workout_plan' : ActorMethod<[bigint], Result_1>,
   'get_user' : ActorMethod<[bigint], Result>,
   'get_user_workout_plan' : ActorMethod<[bigint], Result_1>,
-  'update_user' : ActorMethod<[bigint, UserPayload], Result>,
+  'update_user' : ActorMethod<[bigint, UserUpdatePayload], Result>,
   'update_user_workout_plan' : ActorMethod<
-    [bigint, WorkoutPlanPayload],
+    [bigint, WorkoutPlanUpdatePayload],
     Result_1
   >,
 }

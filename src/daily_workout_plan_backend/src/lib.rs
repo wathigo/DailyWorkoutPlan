@@ -102,6 +102,14 @@
         height: u64,
         age: u64,
     }
+
+    #[derive(candid::CandidType, Serialize, Deserialize, Default)]
+    struct UserUpdatePayload {
+        name: Option<String>,
+        weight: Option<u64>,
+        height: Option<u64>,
+        age: Option<u64>,
+    }
     
     #[derive(candid::CandidType, Serialize, Deserialize, Clone, Default)]
     struct WorkoutPlanPayload {
@@ -109,6 +117,14 @@
         push_ups: u64,
         sit_ups: u64,
         running_time: u64,
+    }
+
+    #[derive(candid::CandidType, Serialize, Deserialize, Clone, Default)]
+    struct WorkoutPlanUpdatePayload {
+        user_id: Option<u64>,
+        push_ups: Option<u64>,
+        sit_ups: Option<u64>,
+        running_time: Option<u64>,
     }
 
     #[ic_cdk::query]
@@ -143,14 +159,27 @@
     }
     
     #[ic_cdk::update]
-    fn update_user(id: u64, payload: UserPayload) -> Result<User, Error> {
+    fn update_user(id: u64, payload: UserUpdatePayload) -> Result<User, Error> {
         match USER_STORAGE.with(|service| service.borrow().get(&id)) {
             Some(mut user) => {
-                user.name = payload.name;
-                user.weight = payload.weight;
-                user.height = payload.height;
-                user.age = payload.age;
+            match payload.name {
+                Some(name) => user.name = name,
+                None => (),
+            }
+            match payload.weight {
+                Some(weight) => user.weight = weight,
+                None => (),
+            }
+            match payload.height {
+                Some(height) => user.height = height,
+                None => (),
+            }
+            match payload.age {
+                Some(age) => user.age = age,
+                None => (),
+            }
                 user.updated_at = Some(time());
+
                 do_insert_user(&user);
                 Ok(user)
             }
@@ -244,13 +273,25 @@
     }
 
     #[ic_cdk::update]
-    fn update_user_workout_plan(user_id: u64, payload: WorkoutPlanPayload) -> Result<WorkoutPlan, Error> {
+    fn update_user_workout_plan(user_id: u64, payload: WorkoutPlanUpdatePayload) -> Result<WorkoutPlan, Error> {
         match WORKOUT_PLAN_STORAGE.with(|service| service.borrow().get(&user_id)) {
             Some(mut work_p) => {
-                work_p.user_id = payload.user_id;
-                work_p.push_ups = payload.push_ups;
-                work_p.sit_ups = payload.sit_ups;
-                work_p.running_time = payload.running_time;
+                match payload.user_id {
+                Some(user_id) => work_p.user_id = user_id,
+                None => (),
+            }
+            match payload.push_ups {
+                Some(push_ups) => work_p.push_ups = push_ups,
+                None => (),
+            }
+            match payload.sit_ups {
+                Some(sit_ups) => work_p.sit_ups = sit_ups,
+                None => (),
+            }
+            match payload.running_time {
+                Some(running_time) => work_p.running_time = running_time,
+                None => ()
+            }
                 work_p.updated_at = Some(time());
                 do_insert_wp(&work_p);
                 Ok(work_p)
