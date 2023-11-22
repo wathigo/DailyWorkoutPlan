@@ -45,7 +45,7 @@ dfx start --background
 Register, build, and deploy canister on the local Internet Computer
 
 ```sh
-nm run gen-deploy
+npm run gen-deploy
 ```
 
 ## Usage
