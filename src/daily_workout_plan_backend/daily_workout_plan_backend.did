@@ -20,6 +20,12 @@ type UserPayload = record {
   height : nat64;
   name : text;
 };
+type UserUpdatePayload = record {
+  age : opt nat64;
+  weight : opt nat64;
+  height : opt nat64;
+  name : opt text;
+};
 type WorkoutPlan = record {
   id : nat64;
   updated_at : opt nat64;
@@ -29,11 +35,11 @@ type WorkoutPlan = record {
   sit_ups : nat64;
   running_time : nat64;
 };
-type WorkoutPlanPayload = record {
-  push_ups : nat64;
-  user_id : nat64;
-  sit_ups : nat64;
-  running_time : nat64;
+type WorkoutPlanUpdatePayload = record {
+  push_ups : opt nat64;
+  user_id : opt nat64;
+  sit_ups : opt nat64;
+  running_time : opt nat64;
 };
 service : {
   add_user : (UserPayload) -> (opt User);
@@ -42,6 +48,6 @@ service : {
   generate_workout_plan : (nat64) -> (Result_1);
   get_user : (nat64) -> (Result) query;
   get_user_workout_plan : (nat64) -> (Result_1) query;
-  update_user : (nat64, UserPayload) -> (Result);
-  update_user_workout_plan : (nat64, WorkoutPlanPayload) -> (Result_1);
+  update_user : (nat64, UserUpdatePayload) -> (Result);
+  update_user_workout_plan : (nat64, WorkoutPlanUpdatePayload) -> (Result_1);
 }
