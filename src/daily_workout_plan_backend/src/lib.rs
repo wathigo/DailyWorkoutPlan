@@ -210,9 +210,12 @@
         if can_delete.is_err() {
             return Err(can_delete.unwrap_err())
         }
-        let delete_workout_plan = delete_user_workout_plan(id);
-        if delete_workout_plan.is_err() {
-            return Err(delete_workout_plan.err().unwrap());
+        let workout_id = _get_workout(&id);
+        if workout_id.is_some() {
+            let delete_workout_plan = delete_user_workout_plan(workout_id.unwrap().1.id);
+            if delete_workout_plan.is_err() {
+                return Err(delete_workout_plan.err().unwrap());
+            }
         }
         match USER_STORAGE.with(|service| service.borrow_mut().remove(&id)) {
             Some(user) => Ok(user),
@@ -317,7 +320,7 @@
             },
             None => Err(Error::ServerError {
                 msg: format!(
-                    "couldn't update workplan for user with id={}",
+                    "couldn't update workplan with id={}",
                     wp_id
                 ),
             }),
