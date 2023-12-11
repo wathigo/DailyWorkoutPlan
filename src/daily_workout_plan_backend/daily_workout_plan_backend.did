@@ -10,6 +10,7 @@ type User = record {
   age : nat64;
   weight : nat64;
   height : nat64;
+  user_principal : principal;
   updated_at : opt nat64;
   name : text;
   created_at : nat64;
