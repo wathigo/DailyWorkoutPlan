@@ -1,7 +1,8 @@
 #[macro_use]
     extern crate serde;
-    use candid::{Decode, Encode};
+    use candid::{Decode, Encode, Principal};
     use ic_cdk::api::time;
+    use ic_cdk::caller;
     use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
     use ic_stable_structures::{BoundedStorable, Cell, DefaultMemoryImpl, StableBTreeMap, Storable};
     use std::{borrow::Cow, cell::RefCell};
@@ -9,9 +10,10 @@
     type Memory = VirtualMemory<DefaultMemoryImpl>;
     type IdCell = Cell<u64, Memory>;
     
-    #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+    #[derive(candid::CandidType, Clone, Serialize, Deserialize)]
     struct User {
         id: u64,
+        user_principal: Principal,
         name: String,
         weight: u64,
         height: u64,
@@ -147,6 +149,7 @@
             .expect("cannot increment id counter");
         let user = User {
             id,
+            user_principal: caller(),
             name: user.name,
             weight: user.weight,
             height: user.height,
@@ -162,6 +165,10 @@
     fn update_user(id: u64, payload: UserUpdatePayload) -> Result<User, Error> {
         match USER_STORAGE.with(|service| service.borrow().get(&id)) {
             Some(mut user) => {
+            let can_update = _is_caller_user(&id);
+            if can_update.is_err() {
+                return Err(can_update.unwrap_err())
+            }
             match payload.name {
                 Some(name) => user.name = name,
                 None => (),
@@ -199,6 +206,17 @@
     
     #[ic_cdk::update]
     fn delete_user(id: u64) -> Result<User, Error> {
+        let can_delete = _is_caller_user(&id);
+        if can_delete.is_err() {
+            return Err(can_delete.unwrap_err())
+        }
+        let workout_id = _get_workout(&id);
+        if workout_id.is_some() {
+            let delete_workout_plan = delete_user_workout_plan(workout_id.unwrap().1.id);
+            if delete_workout_plan.is_err() {
+                return Err(delete_workout_plan.err().unwrap());
+            }
+        }
         match USER_STORAGE.with(|service| service.borrow_mut().remove(&id)) {
             Some(user) => Ok(user),
             None => Err(Error::NotFound {
@@ -213,6 +231,10 @@
     #[ic_cdk::update]
     fn generate_workout_plan(user_id: u64) -> Result<WorkoutPlan, Error> {
         let user = _get_user(&user_id);
+        let can_delete_plan = _is_caller_user(&user_id);
+        if can_delete_plan.is_err() {
+            return Err(can_delete_plan.unwrap_err())
+        }
         if check_user_wp(user_id) {
             return Err(Error::Exists {
                 msg: format!(
@@ -273,13 +295,13 @@
     }
 
     #[ic_cdk::update]
-    fn update_user_workout_plan(user_id: u64, payload: WorkoutPlanUpdatePayload) -> Result<WorkoutPlan, Error> {
-        match WORKOUT_PLAN_STORAGE.with(|service| service.borrow().get(&user_id)) {
+    fn update_user_workout_plan(wp_id: u64, payload: WorkoutPlanUpdatePayload) -> Result<WorkoutPlan, Error> {
+        match WORKOUT_PLAN_STORAGE.with(|service| service.borrow().get(&wp_id)) {
             Some(mut work_p) => {
-                match payload.user_id {
-                Some(user_id) => work_p.user_id = user_id,
-                None => (),
-            }
+                let can_delete_plan = _is_caller_user(&work_p.user_id);
+                if can_delete_plan.is_err() {
+                    return Err(can_delete_plan.unwrap_err())
+                }
             match payload.push_ups {
                 Some(push_ups) => work_p.push_ups = push_ups,
                 None => (),
@@ -298,31 +320,35 @@
             },
             None => Err(Error::ServerError {
                 msg: format!(
-                    "couldn't update workplan for user with id={}",
-                    user_id
+                    "couldn't update workplan with id={}",
+                    wp_id
                 ),
             }),
         }
     }
 
     #[ic_cdk::update]
-    fn delete_user_workout_plan(user_id: u64) -> Result<WorkoutPlan, Error> {
-        match _get_workout(&user_id) {
-            Some((_i, wp)) => {
+    fn delete_user_workout_plan(wp_id: u64) -> Result<WorkoutPlan, Error> {
+        match WORKOUT_PLAN_STORAGE.with(|service| service.borrow().get(&wp_id)) {
+            Some(wp) => {
+                let can_delete_plan = _is_caller_user(&wp.user_id);
+                if can_delete_plan.is_err() {
+                    return Err(can_delete_plan.unwrap_err())
+                }
                 match WORKOUT_PLAN_STORAGE.with(|service| service.borrow_mut().remove(&wp.id)) {
                     Some(workout_plan) => Ok(workout_plan),
                     None => Err(Error::ServerError {
                         msg: format!(
                             "couldn't delete workplan for user with id={}.",
-                            user_id
+                            wp.user_id
                         ),
                     }),
                 }
             },
             None => Err(Error::NotFound {
                 msg: format!(
-                    "couldn't find workplan for user with id={}.",
-                    user_id
+                    "couldn't find workplan for user with wp_id={}.",
+                    wp_id
                 ),
             }),
         }
@@ -436,6 +462,23 @@
     // a helper method to get a user by id. used in get_user/update_user
     fn _get_user(id: &u64) -> Option<User> {
         USER_STORAGE.with(|service| service.borrow().get(id))
+    }
+
+    fn _is_caller_user(user_id: &u64) -> Result<(), Error> {
+        let user = _get_user(&user_id);
+        if user.is_none() {
+            return Err(Error::NotFound {
+                msg: format!(
+                    "couldn't find user with id={}. user not found",
+                    user_id
+                ),
+            })
+        }
+       if user.unwrap().user_principal.to_string() != caller().to_string() {
+            return Err(Error::ServerError { msg: format!("Caller isn't the user's principal.") })
+       } else{
+        Ok(())
+       }
     }
     
     // need this to generate candid
