@@ -13,6 +13,7 @@ export interface User {
   'age' : bigint,
   'weight' : bigint,
   'height' : bigint,
+  'user_principal' : Principal,
   'updated_at' : [] | [bigint],
   'name' : string,
   'created_at' : bigint,

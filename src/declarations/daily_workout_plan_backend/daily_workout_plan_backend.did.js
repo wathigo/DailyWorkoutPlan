@@ -10,6 +10,7 @@ export const idlFactory = ({ IDL }) => {
     'age' : IDL.Nat64,
     'weight' : IDL.Nat64,
     'height' : IDL.Nat64,
+    'user_principal' : IDL.Principal,
     'updated_at' : IDL.Opt(IDL.Nat64),
     'name' : IDL.Text,
     'created_at' : IDL.Nat64,
