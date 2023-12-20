@@ -473,11 +473,15 @@ fn _gen_wp(_user_id: &u64) -> Cache<impl Fn(u64) -> Option<WorkoutPlanPayload>> 
             running_time: 15,
         }
     ];
+
     let calculate_wp = Cache::new(move |_user_id| {
         let user = _get_user(&_user_id);
         match user {
             Some(user) => {
-                let total_intensity = range_ten(100, user.age) + range_ten(7, user.height) + range_ten(150, user.weight);
+                let total_intensity = range_ten(100, user.age) + 
+                                        range_ten(7, user.height) + 
+                                        range_ten(150, user.weight);
+                                        
                 let intensity = range_ten(30, total_intensity);
                 let wp = &workout_plans[intensity as usize];
                 Some(WorkoutPlanPayload {
