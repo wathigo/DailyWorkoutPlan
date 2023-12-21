@@ -479,8 +479,8 @@ fn _gen_wp(_user_id: &u64) -> Cache<impl Fn(u64) -> Option<WorkoutPlanPayload>> 
         match user {
             Some(user) => {
                 let total_intensity = range_ten(100, user.age) + 
-                                        range_ten(7, user.height) + 
-                                        range_ten(150, user.weight);
+                                      range_ten(7, user.height) + 
+                                      range_ten(150, user.weight);
                                         
                 let intensity = range_ten(30, total_intensity);
                 let wp = &workout_plans[intensity as usize];
